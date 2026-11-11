@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>مذاكرة كلمات إنجليزي — ثانوي</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: rgba(255, 255, 255, 0.06);
+    --line: rgba(255, 255, 255, 0.12);
+    --text: #eef1ff;
+    --muted: #9aa4c7;
+    --accent: #a78bfa;
+    --ok: #34d399;
+    --bad: #f87171;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(167, 139, 250, 0.22), transparent 60%),
+      radial-gradient(700px 500px at 0% 110%, rgba(56, 189, 248, 0.15), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 14px 18px 4px;
+    text-align: center;
+  }
+  header h1 { margin: 0; font-size: 22px; }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  main { flex: 1; padding: 12px 14px 92px; max-width: 560px; width: 100%; margin: 0 auto; }
+
+  /* ===== بطاقة ===== */
+  .stage { perspective: 1200px; }
+  .card3d {
+    position: relative;
+    width: 100%;
+    min-height: clamp(220px, 38vh, 320px);
+    transform-style: preserve-3d;
+    transition: transform 0.45s ease;
+    cursor: pointer;
+  }
+  .card3d.is-flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+  }
+  .face.back {
+    transform: rotateY(180deg);
+    justify-content: center;
+    overflow-y: auto;
+  }
+  .pos {
+    font-size: 13px;
+    color: var(--accent);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    background: rgba(167, 139, 250, 0.1);
+    padding: 3px 12px;
+    border-radius: 999px;
+  }
+  .word { font-size: clamp(32px, 9vw, 42px); margin: 6px 0; letter-spacing: 0.5px; direction: ltr; }
+  .meaning { font-size: clamp(24px, 7vw, 30px); margin: 4px 0 2px; }
+  .example { font-size: 17px; color: #d7ddff; direction: ltr; margin: 10px 0 2px; line-height: 1.6; }
+  .exampleAr { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.7; }
+  .hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+  .speak {
+    margin-top: 6px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* ===== أزرار ===== */
+  .controls { display: flex; gap: 10px; margin-top: 16px; }
+  .btn {
+    flex: 1;
+    padding: 13px 10px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn.primary {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    border-color: transparent;
+    font-weight: 700;
+  }
+  .btn:active { transform: scale(0.98); }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .link {
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 6px;
+  }
+  .bar { height: 6px; border-radius: 99px; background: rgba(255, 255, 255, 0.1); margin-top: 12px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(to left, #a78bfa, #38bdf8); transition: width 0.3s; }
+
+  /* ===== اختبار ===== */
+  .quizWord {
+    text-align: center;
+    font-size: clamp(28px, 8vw, 38px);
+    direction: ltr;
+    margin: 10px 0 4px;
+  }
+  .quizAsk { text-align: center; color: var(--muted); margin: 0; font-size: 15px; }
+  .options { display: grid; gap: 10px; margin-top: 18px; }
+  .opt {
+    padding: 15px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font: inherit;
+    font-size: 17px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.15s;
+  }
+  .opt:hover { background: rgba(255, 255, 255, 0.1); }
+  .opt.ok { background: rgba(52, 211, 153, 0.18); border-color: var(--ok); }
+  .opt.bad { background: rgba(248, 113, 113, 0.16); border-color: var(--bad); }
+  .feedback { text-align: center; min-height: 26px; margin-top: 12px; font-size: 16px; }
+  .score { text-align: center; color: var(--muted); font-size: 15px; margin-top: 6px; }
+  .result { text-align: center; padding-top: 26px; }
+  .result h2 { font-size: 26px; margin: 0 0 8px; }
+  .result p { color: var(--muted); }
+  .wrongList { text-align: right; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; margin: 14px 0; line-height: 2; }
+
+  /* ===== تابات ===== */
+  .tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(11, 16, 32, 0.85);
+    border-top: 1px solid var(--line);
+    backdrop-filter: blur(14px);
+  }
+  .tabs button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .tabs button.active {
+    background: rgba(167, 139, 250, 0.16);
+    border-color: rgba(167, 139, 250, 0.45);
+    color: var(--text);
+    font-weight: 700;
+  }
+  .method { margin: 26px 4px 10px; color: var(--muted); font-size: 14px; line-height: 1.9; }
+  .method h3 { color: var(--text); font-size: 16px; margin: 0 0 6px; }
+  .method ol { margin: 0; padding-inline-start: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>كلمات إنجليزي — ثانوي</h1>
+  <p id="headerSub">16 كلمة · بطاقات + اختبار</p>
+</header>
+
+<main>
+  <section id="cardsView">
+    <div class="stage">
+      <div class="card3d" id="card" role="button" tabindex="0" aria-label="اقلب البطاقة">
+        <div class="face front">
+          <span class="pos" id="pos"></span>
+          <h2 class="word" id="word"></h2>
+          <button class="speak" id="speakBtn">🔊 اسمع النطق</button>
+          <p class="hint">دوس على البطاقة تشوف المعنى</p>
+        </div>
+        <div class="face back">
+          <h2 class="meaning" id="meaning"></h2>
+          <p class="example" id="example"></p>
+          <p class="exampleAr" id="exampleAr"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="prevBtn">السابق</button>
+      <button class="btn primary" id="flipBtn">اقلب</button>
+      <button class="btn" id="nextBtn">التالي</button>
+    </div>
+
+    <div class="row">
+      <label><input type="checkbox" id="knownBox" /> أتقنتها</label>
+      <span id="counter"></span>
+      <button class="link" id="shuffleBtn">ترتيب عشوائي</button>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+
+    <div class="method">
+      <h3>طريقة الحفظ (10 دقايق يوميًا)</h3>
+      <ol>
+        <li>اقرأ الكلمة واسمع النطق واقلب البطاقة.</li>
+        <li>ارجع للكلمة الأولى من غير ما تقلب، وجاوب من دماغك.</li>
+        <li>اكتب جملة من تعبيرك لكل كلمة (ولو بسيطة).</li>
+        <li>روح لتاب "اختبرني" وخلّص الـ 16 سؤال.</li>
+        <li>راجع الكلمات اللي غلطت فيها بعد يوم، 3 أيام، أسبوع.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="quizView" hidden>
+    <p class="quizAsk">اختار المعنى الصح</p>
+    <h2 class="quizWord" id="quizWord"></h2>
+    <div class="options" id="options"></div>
+    <p class="feedback" id="feedback"></p>
+    <p class="score">النتيجة: <b id="scoreNum">0</b> من <b id="totalNum">0</b></p>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="cards" class="active">📚 بطاقات</button>
+  <button data-view="quiz">✍️ اختبرني</button>
+</nav>
+
+<script>
+const WORDS = [
+  { en: "Estimate", pos: "فعل / اسم", ar: "يقدّر", ex: "Can you estimate the cost of the trip?", exAr: "تقدر تقدّر تكلفة الرحلة؟" },
+  { en: "Accidentally", pos: "ظرف", ar: "عن طريق الخطأ", ex: "I accidentally deleted the file.", exAr: "مسحت الملف عن طريق الخطأ." },
+  { en: "Surprisingly", pos: "ظرف", ar: "بشكل مفاجئ", ex: "Surprisingly, the test was easy.", exAr: "بشكل مفاجئ، الامتحان كان سهل." },
+  { en: "Amazingly", pos: "ظرف", ar: "بشكل مدهش", ex: "Amazingly, he finished the race first.", exAr: "بشكل مدهش، خلّص السباق الأول." },
+  { en: "Delicate", pos: "صفة", ar: "رقيق / قابل للكسر", ex: "Be careful — this glass is delicate.", exAr: "خد بالك، الكوباية دي قابلة للكسر." },
+  { en: "Concise", pos: "صفة", ar: "مختصر", ex: "Write a concise summary of the lesson.", exAr: "اكتب ملخص مختصر للدرس." },
+  { en: "Precise", pos: "صفة", ar: "دقيق", ex: "The doctor needs precise measurements.", exAr: "الدكتور محتاج قياسات دقيقة." },
+  { en: "Vital", pos: "صفة", ar: "ضروري / حيوي", ex: "Water is vital for life.", exAr: "المية ضرورية للحياة." },
+  { en: "Risky", pos: "صفة", ar: "محفوف بالمخاطر", ex: "Driving fast is risky.", exAr: "السواقة بسرعة محفوفة بالمخاطر." },
+  { en: "Priceless", pos: "صفة", ar: "لا يُقدّر بثمن", ex: "Her smile is priceless.", exAr: "ضحكتها لا تُقدّر بثمن." },
+  { en: "Fussy", pos: "صفة", ar: "صعب الإرضاء", ex: "My brother is a fussy eater.", exAr: "أخويا صعب الإرضاء في الأكل." },
+  { en: "Graceful", pos: "صفة", ar: "رشيق", ex: "The dancer is very graceful.", exAr: "الراقصة كتير رشيقة." },
+  { en: "Mysterious", pos: "صفة", ar: "غامض", ex: "He disappeared in mysterious circumstances.", exAr: "اختفى في ظروف غامضة." },
+  { en: "Tiny", pos: "صفة", ar: "صغير جدًا", ex: "A tiny insect landed on my hand.", exAr: "حشرة صغيرة جدًا نزلت على إيدي." },
+  { en: "Splendid", pos: "صفة", ar: "رائع", ex: "We had a splendid time at the beach.", exAr: "قضينا وقت رائع على البحر." },
+  { en: "Disturb", pos: "فعل", ar: "يزعج", ex: "Please don't disturb him while he studies.", exAr: "من فضلك متزعجهوش وهو بيذاكر." },
+];
+
+const $ = (s) => document.querySelector(s);
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+/* ===== البطاقات ===== */
+let order = WORDS.map((_, i) => i);
+let index = 0;
+let flipped = false;
+const known = new Set(JSON.parse(localStorage.getItem("vocab-known") || "[]"));
+
+const card = $("#card");
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US";
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+function renderCard() {
+  const w = WORDS[order[index]];
+  $("#pos").textContent = w.pos;
+  $("#word").textContent = w.en;
+  $("#meaning").textContent = w.ar;
+  $("#example").textContent = w.ex;
+  $("#exampleAr").textContent = w.exAr;
+  $("#counter").textContent = `${index + 1} / ${order.length}`;
+  $("#knownBox").checked = known.has(w.en);
+  $("#barFill").style.width = `${((index + 1) / order.length) * 100}%`;
+  card.classList.toggle("is-flipped", flipped);
+  $("#headerSub").textContent = `${WORDS.length} كلمة · أتقنت ${known.size}`;
+  localStorage.setItem("vocab-known", JSON.stringify([...known]));
+}
+
+function flip() {
+  flipped = !flipped;
+  card.classList.toggle("is-flipped", flipped);
+}
+
+function go(step) {
+  index = (index + step + order.length) % order.length;
+  flipped = false;
+  renderCard();
+}
+
+card.addEventListener("click", flip);
+$("#flipBtn").addEventListener("click", flip);
+$("#nextBtn").addEventListener("click", () => go(1));
+$("#prevBtn").addEventListener("click", () => go(-1));
+$("#speakBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  speak(WORDS[order[index]].en);
+});
+$("#knownBox").addEventListener("change", (e) => {
+  const key = WORDS[order[index]].en;
+  e.target.checked ? known.add(key) : known.delete(key);
+  renderCard();
+});
+$("#shuffleBtn").addEventListener("click", () => {
+  order = shuffle(order);
+  index = 0;
+  flipped = false;
+  renderCard();
+});
+
+document.addEventListener("keydown", (e) => {
+  if ($("#cardsView").hidden) return;
+  if (e.code === "Space") { e.preventDefault(); flip(); }
+  if (e.code === "ArrowLeft") go(1);
+  if (e.code === "ArrowRight") go(-1);
+});
+
+/* ===== الاختبار ===== */
+let queue = [];
+let qPos = 0;
+let score = 0;
+let wrong = [];
+let locked = false;
+
+function startQuiz() {
+  queue = shuffle(WORDS);
+  qPos = 0;
+  score = 0;
+  wrong = [];
+  $("#scoreNum").textContent = "0";
+  $("#totalNum").textContent = String(queue.length);
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (qPos >= queue.length) return showResult();
+
+  const w = queue[qPos];
+  $("#quizWord").textContent = w.en;
+  $("#feedback").textContent = "";
+  locked = false;
+
+  const others = shuffle(WORDS.filter((x) => x.en !== w.en)).slice(0, 3);
+  const options = shuffle([w, ...others]);
+  const box = $("#options");
+  box.innerHTML = "";
+
+  options.forEach((opt) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = opt.ar;
+    b.addEventListener("click", () => pick(b, opt, w));
+    box.append(b);
+  });
+}
+
+function pick(button, chosen, correct) {
+  if (locked) return;
+  locked = true;
+
+  if (chosen.en === correct.en) {
+    button.classList.add("ok");
+    score++;
+    $("#feedback").textContent = "صح ✅";
+    $("#feedback").style.color = "var(--ok)";
+  } else {
+    button.classList.add("bad");
+    [...document.querySelectorAll(".opt")].forEach((b) => {
+      if (b.textContent === correct.ar) b.classList.add("ok");
+    });
+    $("#feedback").textContent = `اللي فات: ${correct.en} = ${correct.ar}`;
+    $("#feedback").style.color = "var(--bad)";
+    wrong.push(correct);
+  }
+
+  $("#scoreNum").textContent = String(score);
+  setTimeout(() => {
+    qPos++;
+    renderQuestion();
+  }, 1100);
+}
+
+function showResult() {
+  const total = queue.length;
+  const percent = Math.round((score / total) * 100);
+  const message =
+    percent === 100 ? "ممتاز! حفظتهم كلهم 🎉" :
+    percent >= 75 ? "كويس جدًا — راجع الغلط بس 💪" :
+    percent >= 50 ? "نص الطريق — كرر الاختبار مرة كمان" :
+    "لسه محتاج مراجعة، ابدأ بالبطاقات تاني";
+
+  $("#options").innerHTML = "";
+  $("#quizWord").textContent = "";
+  $("#feedback").textContent = "";
+
+  const box = document.createElement("div");
+  box.className = "result";
+  box.innerHTML = `<h2>${score} / ${total} (${percent}%)</h2><p>${message}</p>`;
+
+  if (wrong.length) {
+    const list = document.createElement("div");
+    list.className = "wrongList";
+    list.innerHTML = "<b>الكلمات اللي غلطت فيها:</b><br>" +
+      wrong.map((w) => `${w.en} — ${w.ar}`).join("<br>");
+    box.append(list);
+  }
+
+  const again = document.createElement("button");
+  again.className = "btn primary";
+  again.textContent = "جرّب الاختبار تاني";
+  again.addEventListener("click", startQuiz);
+  box.append(again);
+
+  $("#options").append(box);
+}
+
+/* ===== التابات ===== */
+document.querySelectorAll(".tabs button").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    const isQuiz = tab.dataset.view === "quiz";
+    $("#cardsView").hidden = isQuiz;
+    $("#quizView").hidden = !isQuiz;
+    if (isQuiz) startQuiz();
+  });
+});
+
+renderCard();
+</script>
+</body>
+</html>
