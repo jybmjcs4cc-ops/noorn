@@ -302,13 +302,63 @@ const known = new Set(JSON.parse(localStorage.getItem("vocab-known") || "[]"));
 
 const card = $("#card");
 
+const synth = "speechSynthesis" in window ? speechSynthesis : null;
+let enVoice = null;
+
+function pickVoice() {
+  if (!synth) return;
+  const voices = synth.getVoices();
+  enVoice =
+    voices.find((v) => v.lang.replace("_", "-") === "en-US" && v.localService) ||
+    voices.find((v) => v.lang.replace("_", "-") === "en-US") ||
+    voices.find((v) => /^en([-_]|$)/i.test(v.lang)) ||
+    null;
+}
+
+if (synth) {
+  pickVoice();
+  synth.addEventListener("voiceschanged", pickVoice);
+}
+
+let speakReset = 0;
+let speakCheck = 0;
+
+function speakProblem(message) {
+  const button = $("#speakBtn");
+  button.textContent = message;
+  clearTimeout(speakReset);
+  speakReset = setTimeout(() => {
+    button.textContent = "🔊 اسمع النطق";
+  }, 2800);
+}
+
 function speak(text) {
-  if (!("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
+  if (!synth) {
+    speakProblem("المتصفح ده مش بيدعم النطق");
+    return;
+  }
+  if (!enVoice) pickVoice();
+  if (synth.speaking || synth.pending) synth.cancel();
+  if (synth.paused) synth.resume();
+
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US";
-  u.rate = 0.9;
-  speechSynthesis.speak(u);
+  u.rate = 0.85;
+  if (enVoice) u.voice = enVoice;
+  let started = false;
+  u.onstart = () => {
+    started = true;
+  };
+  u.onerror = (event) => {
+    if (event.error === "canceled" || event.error === "interrupted") return;
+    speakProblem("مفيش صوت — جرّب Chrome");
+  };
+  synth.speak(u);
+
+  clearTimeout(speakCheck);
+  speakCheck = setTimeout(() => {
+    if (!started) speakProblem("مفيش صوت — اتأكد من صوت الموبايل");
+  }, 1500);
 }
 
 function renderCard() {
